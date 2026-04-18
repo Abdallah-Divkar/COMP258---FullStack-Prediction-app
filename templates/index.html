@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Persistence Dashboard</title>
+    <style>
+        :root{
+            --bg:#080808;
+            --panel:#111111;
+            --border:#2a2a2a;
+            --text:#f5f5f5;
+            --muted:#a0a0a0;
+            --green:#4ade80;
+            --green-dark:#0f2a17;
+            --yellow:#facc15;
+            --red:#ef4444;
+        }
+
+        *{
+            box-sizing:border-box;
+        }
+
+        body{
+            margin:0;
+            font-family:Arial, Helvetica, sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .container{
+            max-width:1180px;
+            margin:0 auto;
+            padding:24px 18px 40px;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:18px;
+            gap:14px;
+            flex-wrap:wrap;
+        }
+
+        .brand{
+            font-weight:700;
+            font-size:18px;
+        }
+
+        .nav{
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .tab-btn{
+            background:#1b1b1b;
+            color:#ddd;
+            border:1px solid var(--border);
+            padding:10px 14px;
+            border-radius:10px;
+            cursor:pointer;
+            font-size:13px;
+            transition:0.2s ease;
+        }
+
+        .tab-btn:hover{
+            border-color:#3c3c3c;
+        }
+
+        .tab-btn.active{
+            background:var(--green);
+            color:#052e16;
+            font-weight:700;
+        }
+
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:14px;
+            margin-bottom:18px;
+        }
+
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:16px;
+        }
+
+        .card.highlight{
+            border-color:var(--green);
+            box-shadow:0 0 0 1px rgba(74,222,128,0.12);
+        }
+
+        .label{
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.6px;
+            margin-bottom:8px;
+        }
+
+        .value{
+            font-size:30px;
+            font-weight:700;
+            color:var(--green);
+        }
+
+        .value.white{
+            color:white;
+        }
+
+        .small{
+            font-size:12px;
+            color:var(--muted);
+            margin-top:4px;
+        }
+
+        .section{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:18px;
+            margin-bottom:18px;
+        }
+
+        .section h2{
+            margin:0 0 6px;
+            font-size:18px;
+        }
+
+        .section p.desc{
+            margin:0 0 18px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .tab-content{
+            display:none;
+        }
+
+        .tab-content.active{
+            display:block;
+        }
+
+        form{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:14px 16px;
+        }
+
+        .field label{
+            display:block;
+            font-size:12px;
+            color:#d4d4d4;
+            margin-bottom:7px;
+        }
+
+        input,
+        select{
+            width:100%;
+            padding:12px 12px;
+            border-radius:10px;
+            border:1px solid #333;
+            background:#0d0d0d;
+            color:#fff;
+            outline:none;
+        }
+
+        input:focus,
+        select:focus{
+            border-color:var(--green);
+        }
+
+        .full{
+            grid-column:1 / -1;
+        }
+
+        .submit-btn{
+            background:var(--green);
+            border:none;
+            color:#052e16;
+            font-weight:700;
+            padding:14px 18px;
+            border-radius:10px;
+            cursor:pointer;
+            transition:0.2s ease;
+        }
+
+        .submit-btn:hover{
+            opacity:0.95;
+        }
+
+        .result-box{
+            margin-top:18px;
+            padding:16px;
+            border-radius:12px;
+            border:1px solid #24472e;
+            background:var(--green-dark);
+        }
+
+        .result-box.bad{
+            background:#2a1010;
+            border-color:#5f2323;
+        }
+
+        .result-box h3{
+            margin-top:0;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            text-align:left;
+            padding:12px 10px;
+            border-bottom:1px solid #232323;
+            font-size:13px;
+        }
+
+        th{
+            color:#bdbdbd;
+            font-size:11px;
+            text-transform:uppercase;
+            letter-spacing:0.4px;
+        }
+
+        .risk-high{
+            color:var(--red);
+            font-weight:700;
+        }
+
+        .risk-medium{
+            color:var(--yellow);
+            font-weight:700;
+        }
+
+        .risk-low{
+            color:var(--green);
+            font-weight:700;
+        }
+
+        .mini-bars{
+            display:grid;
+            grid-template-columns:repeat(5,1fr);
+            gap:12px;
+            align-items:end;
+            min-height:240px;
+            margin-top:16px;
+        }
+
+        .mini-col{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:flex-end;
+            gap:8px;
+        }
+
+        .mini-bar{
+            width:100%;
+            max-width:90px;
+            background:linear-gradient(180deg, #86efac, #4ade80);
+            border-radius:10px 10px 0 0;
+            min-height:12px;
+            height:20px;
+        }
+
+        .mini-label{
+            font-size:12px;
+            color:#bdbdbd;
+            text-align:center;
+        }
+
+        .mini-value{
+            font-size:12px;
+            color:#fff;
+        }
+
+        .stats-grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:14px;
+        }
+
+        .stats-box{
+            background:#0d0d0d;
+            border:1px solid #252525;
+            border-radius:12px;
+            padding:16px;
+        }
+
+        .stats-box h3{
+            margin:0 0 8px;
+            font-size:14px;
+            color:#d9d9d9;
+        }
+
+        .stats-box p{
+            margin:0;
+            color:var(--muted);
+            font-size:13px;
+        }
+
+        pre{
+            white-space:pre-wrap;
+            background:#0d0d0d;
+            border:1px solid #2e2e2e;
+            border-radius:12px;
+            padding:14px;
+            color:#d4d4d4;
+            font-size:12px;
+            overflow:auto;
+            line-height:1.5;
+        }
+
+        @media (max-width: 920px){
+            .cards{
+                grid-template-columns:repeat(2,1fr);
+            }
+
+            form{
+                grid-template-columns:1fr;
+            }
+
+            .stats-grid{
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width: 560px){
+            .cards{
+                grid-template-columns:1fr;
+            }
+
+            .mini-bars{
+                grid-template-columns:repeat(2,1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="topbar">
+        <div class="brand">StudentIntel · COMP258</div>
+        <div class="nav">
+            <button class="tab-btn active" onclick="showTab('predict', this)">Predict</button>
+            <button class="tab-btn" onclick="showTab('cohort', this)">Cohort View</button>
+            <button class="tab-btn" onclick="showTab('admin', this)">Admin</button>
+        </div>
+    </div>
+
+    <div class="cards">
+        <div class="card highlight">
+            <div class="label">Model Accuracy</div>
+            <div class="value">{{ dashboard.summary_cards.accuracy }}%</div>
+            <div class="small">Persistence classification</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Students Analyzed</div>
+            <div class="value white">{{ dashboard.summary_cards.students_analyzed }}</div>
+            <div class="small">Current dataset</div>
+        </div>
+
+        <div class="card">
+            <div class="label">At-Risk Flagged</div>
+            <div class="value white">{{ dashboard.summary_cards.at_risk_flagged }}</div>
+            <div class="small">Predicted below 50%</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Avg Predicted Persistence</div>
+            <div class="value white">{{ dashboard.summary_cards.predicted_persistence_rate }}%</div>
+            <div class="small">Whole cohort average</div>
+        </div>
+    </div>
+
+    <!-- PREDICT TAB -->
+    <div id="predict" class="tab-content active">
+        <div class="section">
+            <h2>First-Year Persistence Prediction</h2>
+            <p class="desc">
+                Enter a student profile to predict the probability of returning for the next academic year using the trained neural network.
+            </p>
+
+            <form method="post" action="/">
+                <div class="field">
+                    <label>Student ID</label>
+                    <input type="text" name="student_id" value="{{ defaults.student_id if defaults.student_id else 'STU-2049' }}">
+                </div>
+
+                <div class="field">
+                    <label>High School Average</label>
+                    <input type="number" step="0.01" name="high_school_avg" value="{{ defaults.high_school_avg }}">
+                </div>
+
+                <div class="field">
+                    <label>First Term GPA</label>
+                    <input type="number" step="0.01" name="first_term_gpa" value="{{ defaults.first_term_gpa }}">
+                </div>
+
+                <div class="field">
+                    <label>Second Term GPA</label>
+                    <input type="number" step="0.01" name="second_term_gpa" value="{{ defaults.second_term_gpa }}">
+                </div>
+
+                <div class="field">
+                    <label>Math Score</label>
+                    <input type="number" step="0.01" name="math_score" value="{{ defaults.math_score }}">
+                </div>
+
+                <div class="field">
+                    <label>English Grade</label>
+                    <input type="number" step="0.01" name="english_grade" value="{{ defaults.english_grade }}">
+                </div>
+
+                <div class="field">
+                    <label>First Language</label>
+                    <select name="first_language">
+                        {% for item in options.first_language %}
+                        <option value="{{ item }}" {% if item == defaults.first_language %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Funding</label>
+                    <select name="funding">
+                        {% for item in options.funding %}
+                        <option value="{{ item }}" {% if item == defaults.funding %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>School / Program Code</label>
+                    <select name="school">
+                        {% for item in options.school %}
+                        <option value="{{ item }}" {% if item == defaults.school %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>FastTrack</label>
+                    <select name="fasttrack">
+                        {% for item in options.fasttrack %}
+                        <option value="{{ item }}" {% if item == defaults.fasttrack %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Co-op</label>
+                    <select name="coop">
+                        {% for item in options.coop %}
+                        <option value="{{ item }}" {% if item == defaults.coop %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Residency</label>
+                    <select name="residency">
+                        {% for item in options.residency %}
+                        <option value="{{ item }}" {% if item == defaults.residency %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Gender</label>
+                    <select name="gender">
+                        {% for item in options.gender %}
+                        <option value="{{ item }}" {% if item == defaults.gender %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Previous Education</label>
+                    <select name="previous_education">
+                        {% for item in options.previous_education %}
+                        <option value="{{ item }}" {% if item == defaults.previous_education %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Age Group</label>
+                    <select name="age_group">
+                        {% for item in options.age_group %}
+                        <option value="{{ item }}" {% if item == defaults.age_group %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="full">
+                    <button class="submit-btn" type="submit">Run Persistence Prediction →</button>
+                </div>
+            </form>
+
+            {% if result %}
+            <div class="result-box {% if result.prediction == 0 %}bad{% endif %}">
+                <h3>Prediction Result</h3>
+                <p><strong>Student:</strong> {{ result.student_id }}</p>
+                <p>
+                    <strong>Predicted Outcome:</strong>
+                    {% if result.prediction == 1 %}
+                        Likely to persist ✅
+                    {% else %}
+                        At risk / may not persist ⚠️
+                    {% endif %}
+                </p>
+                <p><strong>Persistence Probability:</strong> {{ "%.2f"|format(result.probability_of_persistence * 100) }}%</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- COHORT TAB -->
+    <div id="cohort" class="tab-content">
+        <div class="section">
+            <h2>Cohort Summary</h2>
+            <p class="desc">
+                This section gives a group-level overview of students predicted by the model, helping identify priority cases for early intervention.
+            </p>
+
+            <div class="stats-grid">
+                <div class="stats-box">
+                    <h3>Total Students</h3>
+                    <p>{{ dashboard.summary_cards.students_analyzed }} students in the analyzed cohort.</p>
+                </div>
+
+                <div class="stats-box">
+                    <h3>At-Risk Students</h3>
+                    <p>{{ dashboard.summary_cards.at_risk_flagged }} students are currently flagged as at risk.</p>
+                </div>
+
+                <div class="stats-box">
+                    <h3>Average Persistence</h3>
+                    <p>{{ dashboard.summary_cards.predicted_persistence_rate }}% average predicted persistence for the full cohort.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Top At-Risk Students</h2>
+            <p class="desc">
+                Students ranked by predicted persistence probability. Lower probability means higher intervention priority.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>1st Term GPA</th>
+                        <th>Persistence %</th>
+                        <th>Risk</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard.risk_rows %}
+                    <tr>
+                        <td>{{ row.student }}</td>
+                        <td>{{ row.first_term_gpa }}</td>
+                        <td>{{ row.persistence_probability }}%</td>
+
+                        {% if row.risk == 'High' %}
+                        <td class="risk-high">{{ row.risk }}</td>
+                        {% elif row.risk == 'Medium' %}
+                        <td class="risk-medium">{{ row.risk }}</td>
+                        {% else %}
+                        <td class="risk-low">{{ row.risk }}</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Prediction Distribution</h2>
+            <p class="desc">
+                Number of students across predicted persistence probability bands.
+            </p>
+
+            <div class="mini-bars">
+                {% for label in dashboard.probability_bands["labels"] %}
+                {% set value = dashboard.probability_bands["values"][loop.index0] %}
+                <div class="mini-col">
+                    <div class="mini-value">{{ value }}</div>
+                    <div class="mini-bar dynamic-height" data-height="{{ 20 + (value * 2) }}"></div>
+                    <div class="mini-label">{{ label }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN TAB -->
+    <div id="admin" class="tab-content">
+        <div class="section">
+            <h2>Neural Network Metrics</h2>
+            <p class="desc">
+                Core evaluation values for the first-year persistence classifier.
+            </p>
+
+            <div class="cards" style="margin:0;">
+                <div class="card highlight">
+                    <div class="label">Accuracy</div>
+                    <div class="value">{{ "%.2f"|format(metrics.accuracy * 100) }}%</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Precision</div>
+                    <div class="value white">{{ "%.2f"|format(metrics.precision) }}</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Recall</div>
+                    <div class="value white">{{ "%.2f"|format(metrics.recall) }}</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">F1 Score</div>
+                    <div class="value white">{{ "%.2f"|format(metrics.f1_score) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>API Endpoint Reference</h2>
+            <pre>GET  /health
+GET  /metrics
+GET  /dashboard-data
+POST /predict
+
+Example JSON for /predict
+{
+  "first_term_gpa": 3.5,
+  "second_term_gpa": 3.2,
+  "high_school_avg": 80,
+  "math_score": 30,
+  "english_grade": 8,
+  "first_language": 1,
+  "funding": 2,
+  "school": 6,
+  "fasttrack": 2,
+  "coop": 1,
+  "residency": 1,
+  "gender": 1,
+  "previous_education": 1,
+  "age_group": 3
+}</pre>
+        </div>
+
+        <div class="section">
+            <h2>Model Architecture</h2>
+            <pre>Framework: FastAPI + scikit-learn
+Classifier: MLPClassifier
+Hidden layers: (64, 32)
+Activation: ReLU
+Optimizer: Adam
+Preprocessing:
+- Median imputation for numeric fields
+- Most-frequent imputation for categorical fields
+- StandardScaler for numeric fields
+- OneHotEncoder for categorical fields
+
+Target:
+- first_year_persistence</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabId, btn){
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.dynamic-height').forEach(el => {
+            const h = Number(el.dataset.height || 20);
+            el.style.height = h + 'px';
+        });
+    });
+</script>
+</body>
+</html>
