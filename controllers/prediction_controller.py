@@ -1,48 +1,44 @@
 import os
-from fastapi import FastAPI, Request, Form
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from model_utils import (
-    load_or_train_model,
-    make_prediction,
-    get_form_options,
-    get_dashboard_data,
-)
+from models.pipeline import load_model
+from services.prediction_service import make_prediction
+from services.dashboard_service import get_dashboard
+from services.form_service import get_form_data
+
+router = APIRouter()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "..", "templates"))
+MODEL_PAYLOAD = load_model()
 
-app = FastAPI(title="Student Persistence Dashboard API")
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-
-MODEL_PAYLOAD = load_or_train_model()
-
-
-@app.get("/health")
+@router.get("/health")
 def health():
     return {"status": "ok"}
 
+'''@router.get("/")
+def test():
+    return {"msg": "working"}'''
 
-@app.get("/metrics")
-def metrics():
-    return MODEL_PAYLOAD["metrics"]
-
-
-@app.get("/dashboard-data")
+@router.get("/dashboard-data")
 def dashboard_data():
-    return get_dashboard_data()
+    return get_dashboard()
 
-
-@app.post("/predict")
-def predict_api(payload: dict):
-    result = make_prediction(payload)
+@router.post("/predict")
+def predict_api(model: dict):
+    result = make_prediction(model)
     return JSONResponse(content=result)
 
+@router.get("/metrics")
+def metrics():
+    return get_dashboard()["metrics"]
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    ui_data = get_form_options()
-    dashboard = get_dashboard_data()
+    ui_data = get_form_data()
+    dashboard = get_dashboard()
 
     return templates.TemplateResponse(
         request=request,
@@ -59,7 +55,7 @@ def home(request: Request):
     )
 
 
-@app.post("/", response_class=HTMLResponse)
+@router.post("/", response_class=HTMLResponse)
 def predict_from_form(
     request: Request,
     student_id: str = Form("STU-DEMO"),
@@ -96,8 +92,8 @@ def predict_from_form(
     }
 
     result = make_prediction(form_data)
-    ui_data = get_form_options()
-    dashboard = get_dashboard_data()
+    ui_data = get_form_data()
+    dashboard = get_dashboard()
 
     result["student_id"] = student_id
 

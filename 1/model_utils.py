@@ -1,4 +1,4 @@
-import os
+'''import os
 import joblib
 import numpy as np
 import pandas as pd
@@ -63,7 +63,7 @@ CATEGORICAL_FEATURES = [
 def get_base_path() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
-
+#Data
 def load_dataset() -> pd.DataFrame:
     full_path = os.path.join(get_base_path(), DATA_FILE)
     df = pd.read_csv(full_path, sep=",", skiprows=24, header=None)
@@ -79,6 +79,47 @@ def load_dataset() -> pd.DataFrame:
 
     return df
 
+#Training
+def train_and_save_model():
+    df = load_dataset()
+    X = df.drop("first_year_persistence", axis=1)
+    y = df["first_year_persistence"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+
+    pipeline = build_pipeline()
+    pipeline.fit(X_train, y_train)
+
+    y_pred = pipeline.predict(X_test)
+    y_prob = pipeline.predict_proba(X_test)[:, 1]
+
+    metrics = {
+        "accuracy": float(accuracy_score(y_test, y_pred)),
+        "precision": float(precision_score(y_test, y_pred, zero_division=0)),
+        "recall": float(recall_score(y_test, y_pred, zero_division=0)),
+        "f1_score": float(f1_score(y_test, y_pred, zero_division=0)),
+        "roc_auc": float(roc_auc_score(y_test, y_prob)),
+        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
+        "samples": int(len(df)),
+    }
+
+    payload = {
+        "pipeline": pipeline,
+        "metrics": metrics,
+        "feature_columns": NUMERIC_FEATURES + CATEGORICAL_FEATURES,
+    }
+
+    model_path = os.path.join(get_base_path(), MODEL_FILE)
+    joblib.dump(payload, model_path)
+    return payload
+
+def load_or_train_model():
+    model_path = os.path.join(get_base_path(), MODEL_FILE)
+    if os.path.exists(model_path):
+        return joblib.load(model_path)
+    return train_and_save_model()
 
 def build_pipeline() -> Pipeline:
     numeric_transformer = Pipeline(
@@ -123,50 +164,7 @@ def build_pipeline() -> Pipeline:
         ]
     )
 
-
-def train_and_save_model():
-    df = load_dataset()
-    X = df.drop("first_year_persistence", axis=1)
-    y = df["first_year_persistence"]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
-
-    pipeline = build_pipeline()
-    pipeline.fit(X_train, y_train)
-
-    y_pred = pipeline.predict(X_test)
-    y_prob = pipeline.predict_proba(X_test)[:, 1]
-
-    metrics = {
-        "accuracy": float(accuracy_score(y_test, y_pred)),
-        "precision": float(precision_score(y_test, y_pred, zero_division=0)),
-        "recall": float(recall_score(y_test, y_pred, zero_division=0)),
-        "f1_score": float(f1_score(y_test, y_pred, zero_division=0)),
-        "roc_auc": float(roc_auc_score(y_test, y_prob)),
-        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
-        "samples": int(len(df)),
-    }
-
-    payload = {
-        "pipeline": pipeline,
-        "metrics": metrics,
-        "feature_columns": NUMERIC_FEATURES + CATEGORICAL_FEATURES,
-    }
-
-    model_path = os.path.join(get_base_path(), MODEL_FILE)
-    joblib.dump(payload, model_path)
-    return payload
-
-
-def load_or_train_model():
-    model_path = os.path.join(get_base_path(), MODEL_FILE)
-    if os.path.exists(model_path):
-        return joblib.load(model_path)
-    return train_and_save_model()
-
-
+#Prediction
 def make_prediction(input_data: dict):
     payload = load_or_train_model()
     pipeline = payload["pipeline"]
@@ -180,7 +178,7 @@ def make_prediction(input_data: dict):
         "probability_of_persistence": probability,
     }
 
-
+#Metrics
 def get_form_options():
     df = load_dataset()
 
@@ -201,7 +199,6 @@ def get_form_options():
         defaults[col] = int(df[col].dropna().mode()[0])
 
     return {"options": options, "defaults": defaults}
-
 
 def get_dashboard_data():
     payload = load_or_train_model()
@@ -279,3 +276,4 @@ def get_dashboard_data():
     }
 
     return dashboard
+'''
