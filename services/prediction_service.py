@@ -13,5 +13,5 @@ def make_prediction(data: dict):
 
     return {
         "prediction": prediction,
-        "probability": probability,
+        "probability_of_persistence": probability,
     }
